@@ -51,7 +51,14 @@
   .card .top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
   .card h3{font-size:15px;font-weight:600;line-height:1.3}
   .card .role{font-size:13px;color:var(--muted);margin-top:2px}
-  .tag{flex-shrink:0;background:var(--accent-soft);color:var(--accent-text);font-size:11px;font-weight:500;padding:4px 9px;border-radius:999px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .tag{flex-shrink:0;background:var(--accent-soft);color:var(--accent-text);font-size:11px;font-weight:500;padding:4px 9px;border-radius:999px;max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .tag-infra{background:#e0f2fe;color:#075985}
+  .tag-energia{background:#dcfce7;color:#166534}
+  .tag-economia{background:#fef9c3;color:#854d0e}
+  .tag-politica{background:#fee2e2;color:#991b1b}
+  .tag-consumo{background:#fae8ff;color:#86198f}
+  .tag-social{background:#e0e7ff;color:#3730a3}
+  .tag-tecnologia{background:#cffafe;color:#155e75}
   .facts{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:11px;font-size:13px;color:#475569}
   .facts span{display:inline-flex;align-items:center;gap:5px}
   .facts svg{color:var(--muted2)}
@@ -113,7 +120,16 @@
       </div>
       <div class="sel">
         <svg class="ic" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.59 13.41 13.42 20.6a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><circle cx="7" cy="7" r="1.5"/></svg>
-        <select id="fFuente"></select>
+        <select id="fFuente">
+          <option value="">Todas las fuentes / temas</option>
+          <option value="infra">Infraestructura y Transporte</option>
+          <option value="energia">Minería, Energía y Sostenibilidad</option>
+          <option value="economia">Economía, Negocios y Finanzas</option>
+          <option value="politica">Asuntos Públicos y Política</option>
+          <option value="consumo">Consumo, Gastronomía y Entretenimiento</option>
+          <option value="social">Social, Empleo y Educación</option>
+          <option value="tecnologia">Tecnología e Innovación</option>
+        </select>
         <svg class="chev" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
       </div>
       <div class="sel">
@@ -173,6 +189,20 @@ function uniqueSorted(key){
   return [...set].sort((a,b)=>a.localeCompare(b,'es'));
 }
 
+// Clasifica el texto libre de "fuente" en una de las 7 macro-categorías del filtro.
+function classifyFuente(d){
+  const raw = norm(d.fuente_full || d.fuente);
+  if(!raw) return '';
+  if(/mina|miner|energ|petrol|gas\b|sostenib|ambient|ecolog|clima/.test(raw)) return 'energia';
+  if(/v[ií]a|vial|infraestructura|movilidad|transporte|aeropuerto|puerto|megaobra|obras/.test(raw)) return 'infra';
+  if(/tecnolog|innovac|digital|gaming|internet/.test(raw)) return 'tecnologia';
+  if(/pol[ií]tica|judicial|ddhh|gobierno|p[uú]blico|seguridad|conflicto|\bpaz\b|distrito|corrupci|congreso|orden p[uú]blico/.test(raw)) return 'politica';
+  if(/entretenimiento|gastronom|turismo|cultura|moda|cine|m[uú]sica|deporte|ocio|mascota|farandula|espect[aá]culo/.test(raw)) return 'consumo';
+  if(/educac|empleo|social|salud|vivienda|pobreza|g[eé]nero|familia|ni[ñn]ez|empleabilidad/.test(raw)) return 'social';
+  if(/econom|finanz|negocio|empresa|mercado|macroeconom|agronegocio|comercio|banco|financier/.test(raw)) return 'economia';
+  return '';
+}
+
 function fillSelect(el, opts, placeholder){
   el.innerHTML = '<option value="">'+placeholder+'</option>' +
     opts.map(o=>'<option value="'+o.replace(/"/g,'&quot;')+'">'+o+'</option>').join('');
@@ -182,7 +212,7 @@ function filtered(){
   const q = state.q.trim().toLowerCase();
   return DATA.filter(d=>{
     if(state.medio && d.medio!==state.medio) return false;
-    if(state.fuente && d.fuente!==state.fuente) return false;
+    if(state.fuente && classifyFuente(d)!==state.fuente) return false;
     if(state.ciudad && d.ciudad!==state.ciudad) return false;
     if(state.tipoMedio && classifyTipoMedio(d)!==state.tipoMedio) return false;
     if(q){
@@ -224,7 +254,8 @@ function buildWaLink(d){
 }
 
 function card(d){
-  const fuente = d.fuente ? '<span class="tag" title="'+esc(d.fuente)+'">'+esc(d.fuente)+'</span>' : '';
+  const fCat = classifyFuente(d);
+  const fuente = d.fuente ? '<span class="tag'+(fCat?' tag-'+fCat:'')+'" title="'+esc(d.fuente)+'">'+esc(d.fuente)+'</span>' : '';
   const facts = [];
   if(d.medio) facts.push('<span>'+ICON.medio+esc(d.medio)+'</span>');
   if(d.ciudad) facts.push('<span>'+ICON.ciudad+esc(d.ciudad)+'</span>');
@@ -341,7 +372,6 @@ document.addEventListener('click', e=>{
 
 // init
 fillSelect($('#fMedio'), uniqueSorted('medio'), 'Todos los medios');
-fillSelect($('#fFuente'), uniqueSorted('fuente'), 'Todas las fuentes / temas');
 fillSelect($('#fCiudad'), uniqueSorted('ciudad'), 'Todas las ciudades');
 render();
 </script>
